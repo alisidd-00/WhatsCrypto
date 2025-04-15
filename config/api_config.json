@@ -1,0 +1,17 @@
+{
+  "cryptocompare": {
+    "base_url": "https://min-api.cryptocompare.com/data/v2/news/",
+    "api_key": "e26a5fc79fdd18f4dee8861b33319a42013bc99b3e0951ccd29032e2eb2e9fbd"
+  },
+  "cryptopanic": {
+    "base_url": "https://cryptopanic.com/api/v1/posts/",
+    "api_key": "86bf317fdd03d8b394a885d008efe5ab617db724"
+  },
+  "coingecko": {
+    "base_url": "https://api.coingecko.com/api/v3/"
+  },
+  "data_storage": {
+    "type": "sqlite",  
+    "path": "data/crypto_news.db"
+  }
+} 
