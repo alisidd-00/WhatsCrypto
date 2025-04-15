@@ -27,10 +27,18 @@ class NewsDatabase:
         except Exception as e:
             logger.error(f"Error loading config: {e}")
             return {}
+    
+    def _get_connection(self):
+        """Get a database connection."""
+        if self.db_type == "sqlite":
+            return sqlite3.connect(self.db_path)
+        else:
+            logger.error(f"Unsupported database type: {self.db_type}")
+            return None
             
     def _init_sqlite(self):
         """Initialize SQLite database with necessary tables"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
         
         # Create news table
@@ -79,7 +87,7 @@ class NewsDatabase:
             
     def _save_news_sqlite(self, news_items):
         """Save news items to SQLite database"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
         
         saved_count = 0
@@ -123,7 +131,7 @@ class NewsDatabase:
             
     def _save_coin_updates_sqlite(self, coin_updates):
         """Save coin updates to SQLite database"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
         
         saved_count = 0
@@ -154,13 +162,41 @@ class NewsDatabase:
     def get_recent_news(self, limit=100):
         """Get the most recent news items from the database"""
         if self.db_type == "sqlite":
-            conn = sqlite3.connect(self.db_path)
+            conn = self._get_connection()
             df = pd.read_sql_query(f"SELECT * FROM news ORDER BY published_at DESC LIMIT {limit}", conn)
             conn.close()
             return df
         else:
             logger.error(f"Unsupported database type: {self.db_type}")
             return pd.DataFrame()
+    
+    def get_latest_analysis(self):
+        """Get the most recent analysis from the database"""
+        if self.db_type == "sqlite":
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            
+            try:
+                cursor.execute('''
+                SELECT analysis_data, created_at FROM news_analysis
+                ORDER BY created_at DESC
+                LIMIT 1
+                ''')
+                
+                result = cursor.fetchone()
+                if result:
+                    analysis_data, created_at = result
+                    return {"analysis": json.loads(analysis_data), "created_at": created_at}
+                else:
+                    return {"analysis": None, "message": "No analysis found"}
+            except Exception as e:
+                logger.error(f"Error retrieving latest analysis: {e}")
+                return {"error": str(e)}
+            finally:
+                conn.close()
+        else:
+            logger.error(f"Unsupported database type: {self.db_type}")
+            return {"error": "Unsupported database type"}
         
     def save_news_to_files(self, news_items):
         """Save news items as JSON files in the news_data directory"""
